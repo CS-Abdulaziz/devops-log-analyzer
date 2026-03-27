@@ -1,17 +1,17 @@
-import json
 from .schema import IncidentResult
 
 
-def parse_response(response: str) -> IncidentResult:
+def parse_response(data: dict) -> IncidentResult:
     try:
-        data = json.loads(response)
-
         return IncidentResult(
-            issue_type=data.get("issue_type", "Unknown"),
+            issue_type=data.get("category", "Unknown"),
             root_cause=data.get("root_cause", "Unknown"),
-            suggested_fixes=data.get("suggested_fixes", []),
-            confidence=data.get("confidence", 50),
+            suggested_fixes=[data.get("fix", "No fix provided")],
+            confidence=int(float(data.get("confidence", 0)) * 100)
+            if data.get("confidence") is not None
+            else 0,
         )
+
     except Exception:
         return IncidentResult(
             issue_type="Parsing Error",
