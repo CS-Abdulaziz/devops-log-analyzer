@@ -1,11 +1,18 @@
 from .parser import parse_response
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_setup import get_generator_model
 from .schema import IncidentResult
-from llm_setup import LogAnalyzer
+from .prompts import SYSTEM_PROMPT
 
 
-analyzer = LogAnalyzer()
+def analyze_log(log: str) -> IncidentResult:
+    model = get_generator_model()
 
+    messages = [
+        SystemMessage(content=SYSTEM_PROMPT),
+        HumanMessage(content=log)
+    ]
 
-def analyze_log(user_input: str) -> IncidentResult:
-    raw_result = analyzer.analyze_log(user_input)
-    return parse_response(raw_result)
+    response = model.invoke(messages)
+
+    return parse_response(response.content)

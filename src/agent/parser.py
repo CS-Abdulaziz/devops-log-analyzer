@@ -1,15 +1,35 @@
+import json
 from .schema import IncidentResult
 
 
-def parse_response(data: dict) -> IncidentResult:
+def parse_response(data) -> IncidentResult:
+
     try:
+        if isinstance(data, str):
+            data = json.loads(data)
+
+        fixes = data.get("suggested_fixes", [])
+        if isinstance(fixes, str):
+            fixes = [fixes]
+        elif not isinstance(fixes, list):
+            fixes = ["No fix provided"]
+
+        confidence = data.get("confidence", 0)
+
+        if isinstance(confidence, float) and confidence <= 1:
+            confidence = int(confidence * 100)
+        elif isinstance(confidence, (int, float)):
+            confidence = int(confidence)
+        else:
+            confidence = 0
+
+
         return IncidentResult(
-            issue_type=data.get("category", "Unknown"),
+            
+            issue_type=data.get("issue_type", "Unknown"),
             root_cause=data.get("root_cause", "Unknown"),
-            suggested_fixes=[data.get("fix", "No fix provided")],
-            confidence=int(float(data.get("confidence", 0)) * 100)
-            if data.get("confidence") is not None
-            else 0,
+            suggested_fixes=fixes,
+            confidence=confidence,
         )
 
     except Exception:
